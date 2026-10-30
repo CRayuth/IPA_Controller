@@ -25,6 +25,7 @@ struct SetPiecePad: View {
     let screen: SetPieceScreen
 
     @EnvironmentObject private var controller: ControllerModel
+    @AppStorage("touchpadfc.globalButtonScale") private var globalScale = 1.0
     @State private var showCornerTactics = false
     @State private var tacticsPulse = 0
 
@@ -92,7 +93,7 @@ struct SetPiecePad: View {
 
     var body: some View {
         GeometryReader { area in
-            let scale = min(1.0, max(0.69, area.size.width / 830))
+            let scale = min(1.0, max(0.69, area.size.width / 830)) * CGFloat(globalScale)
             let stickSize: CGFloat = 134 * scale
             let buttonSize: CGFloat = 92 * scale
 

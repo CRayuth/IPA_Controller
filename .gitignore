@@ -1,8 +1,16 @@
-.DS_Store
-__pycache__/
-*.pyc
-*.xcuserstate
-*.xcworkspace/xcuserdata/
-*.xcodeproj/xcuserdata/
+# Xcode-generated output and user settings
+*.xcodeproj/
+*.xcworkspace/
 DerivedData/
+.build/
 build/
+.DS_Store
+*.xcuserstate
+*.xcuserdata/
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+# Local secrets/config
+.env

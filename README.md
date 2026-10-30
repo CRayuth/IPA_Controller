@@ -1,112 +1,116 @@
-# TouchPad FC 27 v3 — iPhone touchscreen gamepad for Windows
+# TouchPadFC — complete v11 source project
 
-This project contains an Xcode-ready SwiftUI source app and a Python Windows virtual gamepad receiver.
-It is **not** a pre-signed IPA, not a native DualSense driver, and does not control an actual PS5 console.
+Use an iPhone in landscape as a Wi-Fi touch controller for EA SPORTS FC on a Windows computer. The iPhone app is built with SwiftUI; the Python receiver uses `vgamepad` and the Windows ViGEmBus virtual gamepad driver. **This is source code, not an already-signed IPA.** Game behavior has not been validated on a real iPhone with FC 27.
 
-## Updated FC 27 features
-
-- More compact landscape layout with larger move stick, face buttons and shoulder controls.
-- Attack and Defend **manual display modes** with matching gameplay labels.
-- Manual combo keys: finesse, chip, power shot, driven pass, curved run, pass & follow, and defensive combinations.
-- Optional Sprint Lock. It starts disabled and is reset when disconnecting or changing mode.
-- Multi-touch holds tracked by source: releasing one shortcut cannot cancel another still-held input.
-- Left/right sticks have a small center deadzone for accurate dribbling and skill moves.
-- 60 input reports/second; Windows now acknowledges valid packets, so CONNECTED actually means the receiver replied.
-- The receiver defaults to an Xbox 360 virtual controller for common PC gamepad compatibility. DS4 mode remains available.
-- The inactivity safety timeout still releases stuck inputs after 350 ms.
-
-## v3 — Editable controller layout (new)
-
-1. Tap **EDIT LAYOUT** at the top of the iPhone screen. Editing releases held gamepad inputs.
-2. Tap and drag any control to move it; drag the **Size** slider to resize the selected control (65–145%).
-3. Choose **RESET ITEM** for one control, or **RESET ALL** to restore the original layout.
-4. Tap **DONE**. Positions and sizes save locally on the iPhone, and persist on relaunch.
-
-You can edit **offline** before pairing. The six attack/defend shortcut positions are shared, but their actions change with mode. See [docs/LAYOUT-EDITOR.md](docs/LAYOUT-EDITOR.md).
-
-**Upgrade from v2:** Replace the complete `ControllerView.swift` file and add `ControllerLayout.swift` inside `ios/TouchPadFC`. No receiver files or `project.yml` changes are required. Re-run `xcodegen generate` so Xcode includes the added Swift file. This package also includes updated documentation.
-
-## Folder structure
+## Project structure
 
 ```text
-TouchPadFC-FC27-v3/
-├── project.yml
+TouchPadFC-v11-complete/
 ├── ios/TouchPadFC/
-│   ├── TouchPadFCApp.swift
-│   ├── ControllerModel.swift        # from v2: buttons, sprint, 60 Hz, ACK
-│   ├── ControllerView.swift         # CHANGED: draggable, scalable layout
-│   └── ControllerLayout.swift       # NEW: layout state + saved positions
+│   ├── TouchPadFCApp.swift       SwiftUI entry point and game-mode selector
+│   ├── ControllerModel.swift     UDP networking and timed input sequences
+│   ├── ControllerView.swift      Landscape controller, settings and edit UI
+│   ├── ControllerLayout.swift    Button positioning and scale persistence
+│   ├── GesturePadButton.swift    PASS/THROUGH/SHOOT/DASH gesture recognition
+│   ├── ActionLibrary.swift       Extended skills, tactics and action catalog
+│   ├── SetPiecePad.swift         Penalty, free kick and corner layouts
+│   └── Info.plist                iOS network privacy and landscape orientation
 ├── receiver/
-│   ├── server.py                    # from v2: ACK, xbox default
-│   ├── gamepad.py                   # UNCHANGED: mapping
-│   ├── protocol.py                  # UNCHANGED: validated input
+│   ├── __init__.py
+│   ├── gamepad.py                ViGEm virtual controller translation
+│   ├── protocol.py               Packet validation
+│   ├── possession.py             Optional experimental image detection
+│   ├── server.py                 UDP receiver and pairing PIN
 │   ├── requirements.txt
 │   └── tests/test_protocol.py
-└── docs/
-    ├── LAYOUT-EDITOR.md            # NEW: editing, resizing and reset
-    ├── FC27-CONTROLS.md            # from v2
-    └── REA.md
+├── docs/
+│   ├── QUICK-START.md
+│   ├── CONTROLS.md
+│   ├── LAYOUT-EDITOR.md
+│   └── REA.md
+├── .github/workflows/ios.yml
+├── project.yml                   XcodeGen configuration
+├── run-receiver.bat              Windows convenience launcher
+└── .gitignore
 ```
 
-## 1. Windows receiver
+## Step 1 — Windows PC receiver
 
-Open PowerShell in the project folder:
+1. Install **Python 3.10+** for Windows, with the `py` launcher.
+2. Install the **ViGEmBus driver** needed by `vgamepad`. Use a reputable official or project-maintained source. The ZIP does not bundle this driver.
+3. Extract the ZIP, open PowerShell in the extracted folder, run:
+
+   ```powershell
+   py -m pip install -r receiver/requirements.txt
+   py -m receiver.server --mode xbox
+   ```
+
+   Or double-click `run-receiver.bat`.
+4. Note the **six-digit pairing PIN** printed in PowerShell. Keep the receiver running.
+5. Run `ipconfig` and find your PC's actual IPv4 address (such as `192.168.1.20`).
+6. Allow inbound **UDP port 52777 on your private LAN only** in Windows Firewall if asked.
+
+The receiver has a test mode that does not require the virtual driver:
 
 ```powershell
-py -m pip install -r receiver/requirements.txt
-py -m receiver.server --mode xbox
+py -m receiver.server --mode xbox --dry-run
 ```
 
-You need the **ViGEmBus** virtual controller driver supported by `vgamepad` on Windows.
-If the driver is already installed, do not install another copy.
-The receiver prints a 6-digit PIN. Run `ipconfig` to find your PC's local IPv4 address.
-Allow Python on your **Private** firewall network only; keep UDP port `52777` off the public internet.
-For a driver-free test: `py -m receiver.server --dry-run --pin 123456`.
+A 6-digit PIN is only lightweight pairing, not encrypted authentication. Use a trusted private network; do **not** expose UDP 52777 to the public internet.
 
-## 2. Build and install on iPhone
+## Step 2 — iPhone app
 
-Xcode and macOS are needed for normal iOS compilation and signing.
+You **need a Mac running Xcode** to compile and install this SwiftUI iOS source on an iPhone. XcodeGen generates the Xcode project; it is not included as a prebuilt `.xcodeproj` or IPA.
 
 ```bash
 brew install xcodegen
-cd TouchPadFC-FC27-v3
+cd /path/to/TouchPadFC-v11-complete
 xcodegen generate
 open TouchPadFC.xcodeproj
 ```
 
-Choose your Apple Development Team and your unique iOS bundle identifier in Xcode.
-Build to a connected iPhone, then use **Product > Archive** if you need a signed IPA distribution workflow.
-The target requires iOS 16+.
+In Xcode:
 
-## 3. Play EA SPORTS FC 27 on Windows
+1. Select the `TouchPadFC` target, then **Signing & Capabilities**.
+2. Set your own **Team** and **Bundle Identifier** (the sample is `com.example.touchpadfc`).
+3. Choose your connected iPhone and press **Run**. Trust the developer profile on device if prompted.
+4. Allow **Local Network** access when iOS asks.
+5. Open **PC** in TouchPadFC, enter Windows IPv4 address and the displayed PIN, tap **Connect**, then **Play**.
+6. Run Windows `joy.cpl` to confirm the virtual Xbox controller responds before opening the game.
 
-1. Connect your PC and iPhone to the same **private Wi-Fi**.
-2. Start the receiver and record its PIN and the PC IPv4 address.
-3. Open the iPhone app. Enter the host and PIN; tap Connect, and wait for **CONNECTED**.
-4. On Windows press Win+R, enter `joy.cpl`, and verify the controls.
-5. Launch FC 27 and configure **Settings > Customize Controls > Classic**.
-6. Use ATTACK/DEFEND to change on-screen labels; select it manually when possession changes if helpful.
-7. Read [docs/FC27-CONTROLS.md](docs/FC27-CONTROLS.md) for the detailed mapping.
+Choose the **Classic** control configuration in FC. Do not assume every advanced action works in all game modes; test in Practice Arena.
 
-If FC 27 does not detect Xbox mode, stop the receiver and try:
+## Step 3 — play and customize
+
+- Left movement: **Fixed / Floating** joystick, selectable from PC settings.
+- Main actions: **THROUGH, SHOOT, PASS, DASH**. Tap, hold and swipe for variations.
+- **Double-tap DASH** for the *proposed Curved Run mapping*, and **CANCEL ×2** for a Hard Super Cancel attempt.
+- **SKILLS, TACTICS, ACTIONS** open the advanced catalog; Favorite actions with ★.
+- **EDIT** to drag each on-screen match button and adjust its size, or **PC → Button Size** for global scaling.
+- Customize the two **Quick Buttons** under PC settings.
+- Top **GAME MODE** picker switches between match, penalties, free kicks and corners.
+
+See `docs/CONTROLS.md` for the full control table and important limitations.
+
+## Optional possession detection
+
+The optional image-based `--roi x,y,width,height` system needs `mss`, `numpy` and a visible region of the game display that consistently changes with possession. It is experimental and does not automatically identify possession reliably.
 
 ```powershell
-py -m receiver.server --mode ds4
+py -m pip install mss numpy
+py -m receiver.server --mode xbox --roi 40,40,160,60
 ```
 
-Note that selecting **Xbox labels** on the iPhone changes button *text* only, not the selected Windows virtual device type.
+Calibrate attack with **F8** and defend with **F9** while the relevant game display is visible. Use manual mode when uncertain.
 
-## Security and limitations
-
-- The PIN travels over unencrypted UDP: use trusted private Wi-Fi only.
-- A receiver ACK confirms packet reception, **not** successful driver installation or FC 27 acceptance.
-- Basic touchscreen shortcuts merely combine standard manual gamepad buttons. This is not shot timing automation.
-- Touch cannot replicate physical analog trigger pressure, force-feedback or adaptive triggers.
-- iOS builds and actual EA FC 27 gameplay need testing on real hardware; passing source syntax/tests is not proof of compatibility.
-- REA is optional for inspecting your own builds. Do not modify EA FC 27 or its anti-cheat.
-
-## Validate Python protocol
+## Testing
 
 ```powershell
 py -m unittest discover -s receiver/tests -v
 ```
+
+Swift files were syntax-parsed on Linux and Python tests run, but that **is not** an iOS compilation. The GitHub Actions `ios.yml` runs `xcodebuild` on macOS when this project is committed to GitHub. Device pairing, ViGEm installation and EA FC gameplay still require real-world validation.
+
+## Legal and safety
+
+TouchPadFC is an independent experimental hobby controller and is **not affiliated with Electronic Arts, Apple, Microsoft or Konami**. Only connect to Windows PCs and networks you own or are authorized to use. EA FC settings and future updates may change how commands behave.
