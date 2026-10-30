@@ -1,0 +1,39 @@
+name: TouchPadFC
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  TouchPadFC:
+    type: application
+    platform: iOS
+    sources:
+      - path: ios/TouchPadFC
+    info:
+      path: ios/TouchPadFC/Info.plist
+      properties:
+        CFBundleDisplayName: TouchPad FC
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        NSLocalNetworkUsageDescription: Connect to your own Windows PC to send virtual controller inputs over local Wi-Fi.
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIRequiresFullScreen: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.touchpadfc
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+        CODE_SIGN_STYLE: Automatic
+schemes:
+  TouchPadFC:
+    build:
+      targets:
+        TouchPadFC: all
+    run:
+      config: Debug
+    archive:
+      config: Release

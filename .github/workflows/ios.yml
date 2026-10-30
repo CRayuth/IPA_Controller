@@ -1,0 +1,74 @@
+name: Build unsigned IPA
+
+# Produces an UNSIGNED .ipa artifact. Signing happens on the user's PC
+# (Sideloadly / AltStore) with their own Apple ID, so no certificates,
+# provisioning profiles or secrets are stored in this repository.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "ios/**"
+      - "project.yml"
+      - ".github/workflows/ios.yml"
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build for device without signing
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project TouchPadFC.xcodeproj \
+            -scheme TouchPadFC \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS="" \
+            build
+
+      - name: Package Payload as .ipa
+        run: |
+          set -euo pipefail
+          APP="build/Build/Products/Release-iphoneos/TouchPadFC.app"
+          if [ ! -d "$APP" ]; then
+            echo "::error::TouchPadFC.app was not produced"
+            find build/Build/Products -maxdepth 3 || true
+            exit 1
+          fi
+          rm -rf Payload TouchPadFC-unsigned.ipa
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          # Sideloadly / AltStore require exactly Payload/<Name>.app inside the zip.
+          /usr/bin/zip -qry TouchPadFC-unsigned.ipa Payload
+          ls -lh TouchPadFC-unsigned.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TouchPadFC-unsigned-ipa
+          path: TouchPadFC-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
