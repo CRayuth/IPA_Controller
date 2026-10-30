@@ -35,19 +35,42 @@ jobs:
 
       - name: Build for device without signing
         run: |
-          set -o pipefail
+          set +e
           xcodebuild \
             -project TouchPadFC.xcodeproj \
-            -scheme TouchPadFC \
+            -target TouchPadFC \
             -configuration Release \
             -sdk iphoneos \
-            -destination "generic/platform=iOS" \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGN_ENTITLEMENTS="" \
-            build
+            build > build.log 2>&1
+          status=$?
+
+          echo "xcodebuild exit status: $status"
+
+          # Re-emit diagnostics as check-run annotations so they show on the
+          # run summary and stay readable without downloading logs.
+          grep -E "error:|xcodebuild: error|BUILD FAILED" build.log \
+            | head -n 25 \
+            | while IFS= read -r line; do
+                echo "::error::$line"
+              done
+
+          echo "---- last 80 log lines ----"
+          tail -n 80 build.log
+          exit $status
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Package Payload as .ipa
         run: |
