@@ -447,6 +447,9 @@ private struct PCSettingsSheet: View {
                     TextField("PC IPv4 address", text: $controller.host)
                         .keyboardType(.numbersAndPunctuation)
                         .textInputAutocapitalization(.never)
+                    TextField("UDP port", text: $controller.port).keyboardType(.numberPad)
+                    Text("If Windows refuses port 52777 (Hyper-V and WinNAT reserve UDP ranges), start the receiver with --port 53400 and enter 53400 here.")
+                        .font(.footnote).foregroundStyle(.secondary)
                     TextField("6-digit PIN", text: $controller.pin).keyboardType(.numberPad)
                     Text(controller.message).foregroundStyle(controller.paired ? .green : .secondary)
                     HStack {

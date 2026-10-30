@@ -8,4 +8,4 @@
 
 **Button sizing:** PC > Button Size adjusts everything. EDIT > select control > slider changes its individual size. Drag to move. DONE saves the layout. PC > Movement Joystick chooses Fixed or Floating.
 
-**Troubleshooting:** IP address must be the PC's *LAN IPv4*, not `127.0.0.1` or a public address. Check private Wi-Fi, firewall UDP 52777, receiver window and ViGEmBus installation. If menus work but FC doesn't respond, verify the game is using the emulated controller and its Classic layout.
+**Troubleshooting:** IP address must be the PC's *LAN IPv4*, not `127.0.0.1` or a public address; with Hyper-V, VMware, Tailscale or a VPN installed, pick the address of the Wi-Fi/Ethernet adapter, not a virtual one. If the receiver reports `WinError 10013`, Windows reserved UDP 52777 — start it with `--port 53400` and set the same **UDP port** in the app. Also check private Wi-Fi, firewall UDP, receiver window and ViGEmBus installation. If menus work but FC doesn't respond, verify the game is using the emulated controller and its Classic layout.

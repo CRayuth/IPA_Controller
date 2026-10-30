@@ -47,6 +47,7 @@ struct InputStep {
 @MainActor
 final class ControllerModel: ObservableObject {
     @Published var host = UserDefaults.standard.string(forKey: "pcHost") ?? ""
+    @Published var port = UserDefaults.standard.string(forKey: "pcPort") ?? "52777"
     @Published var pin = ""
     @Published private(set) var streaming = false
     @Published private(set) var paired = false
@@ -77,6 +78,11 @@ final class ControllerModel: ObservableObject {
             message = "Enter a valid PC IPv4 address"
             return
         }
+        let portText = port.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let portNumber = UInt16(portText), portNumber > 0 else {
+            message = "Enter the receiver UDP port (1-65535)"
+            return
+        }
         guard pin.count == 6, pin.allSatisfy({ $0.isASCII && $0.isNumber }) else {
             message = "Enter the six-digit PIN from PowerShell"
             return
@@ -84,12 +90,14 @@ final class ControllerModel: ObservableObject {
 
         disconnect()
         host = ip
+        port = portText
         UserDefaults.standard.set(ip, forKey: "pcHost")
+        UserDefaults.standard.set(portText, forKey: "pcPort")
         sequenceNumber = 0
         message = "Connecting…"
 
         let next = NWConnection(host: NWEndpoint.Host(ip),
-                                port: NWEndpoint.Port(rawValue: 52777)!, using: .udp)
+                                port: NWEndpoint.Port(rawValue: portNumber)!, using: .udp)
         connection = next
         next.stateUpdateHandler = { [weak self] state in
             Task { @MainActor [weak self] in

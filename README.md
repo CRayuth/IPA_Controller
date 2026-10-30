@@ -18,6 +18,8 @@ py -m pip install -r receiver/requirements.txt
 py -m receiver.server --mode xbox
 ```
 
+If Windows refuses UDP 52777 (`WinError 10013`), Hyper-V, WinNAT or a VPN adapter reserved it — run the receiver with `--port 53400` and set the same **UDP port** in the app.
+
 **2. iPhone:** On a Mac with Xcode and XcodeGen installed, run:
 
 ```bash
@@ -27,4 +29,4 @@ open TouchPadFC.xcodeproj
 
 Select your signing team in Xcode and install the app on your iPhone.
 
-**3. Connect:** Put both devices on the same private Wi-Fi network. In TouchPadFC, tap **PC**, enter your Windows IPv4 address and the receiver PIN, then tap **Connect → Play**. Check inputs with `joy.cpl` on Windows.
+**3. Connect:** Put both devices on the same private Wi-Fi network. In TouchPadFC, tap **PC**, enter your Windows IPv4 address (the Wi-Fi adapter's, not a Hyper-V/VMware/Tailscale one), the receiver's UDP port and the PIN, then tap **Connect → Play**. Check inputs with `joy.cpl` on Windows.

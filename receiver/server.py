@@ -14,6 +14,24 @@ TIMEOUT_SECONDS = 0.35
 ACK_INTERVAL = 0.5
 
 
+def suggest_free_port(start: int, attempts: int = 200) -> int:
+    """Return the next bindable UDP port at or after ``start``."""
+
+    for candidate in range(start, min(start + attempts, 65536)):
+        probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        try:
+            probe.bind(("0.0.0.0", candidate))
+        except OSError:
+            continue
+        finally:
+            probe.close()
+
+        return candidate
+
+    return start
+
+
 def run(
     mode: str,
     pin: str,
@@ -33,7 +51,21 @@ def run(
         detector = PossessionDetector(roi)
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(("0.0.0.0", port))
+
+    try:
+        sock.bind(("0.0.0.0", port))
+    except OSError as exc:
+        free_port = suggest_free_port(port + 1)
+        print(f"Cannot bind UDP {port}: {exc}", flush=True)
+        print(
+            "Hyper-V, WinNAT and VPN adapters reserve UDP port ranges "
+            "on Windows. Restart the receiver on a free port and enter "
+            f"the same port in the app: --port {free_port}",
+            flush=True,
+        )
+        sock.close()
+        raise SystemExit(1)
+
     sock.settimeout(0.05)
 
     peer = None
@@ -46,8 +78,8 @@ def run(
     print(f"TouchPadFC | {mode} | UDP {port}", flush=True)
     print(f"PAIRING PIN: {pin}", flush=True)
     print(
-        "Get PC IP with ipconfig. "
-        "iPhone and PC must use the same private network.",
+        "In the app enter this PC's IPv4, UDP port "
+        f"{port} and the PIN.",
         flush=True,
     )
 
