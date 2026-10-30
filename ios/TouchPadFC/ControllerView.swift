@@ -389,7 +389,7 @@ struct ControllerView: View {
         _ item: PadItem,
         in canvas: CGSize,
         adaptation: CGFloat,
-        @ViewBuilder content: () -> Content
+        @escaping @ViewBuilder content: () -> Content
     ) -> some View {
         PositionedPadItem(
             item: item,
