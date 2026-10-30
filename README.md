@@ -11,7 +11,9 @@ Turn your iPhone into a touchscreen controller for **EA SPORTS FC on Windows**. 
 
 ## Quick Start
 
-**1. Windows:** Install Python 3.10+ and the ViGEmBus driver. In the project folder, run:
+**1. Windows:** Download **TouchPadFC.exe** from the [latest release](https://github.com/CRayuth/IPA_Controller/releases/latest) and double-click it. No Python install and no command line are needed: on first run it installs the free ViGEmBus driver, opens the firewall port, picks a free UDP port and shows the IP address, port and PIN to type into the app.
+
+Prefer running from source? Install Python 3.10+ and the ViGEmBus driver, then in the project folder run:
 
 ```powershell
 py -m pip install -r receiver/requirements.txt

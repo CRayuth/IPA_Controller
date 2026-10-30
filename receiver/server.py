@@ -38,6 +38,7 @@ def run(
     port: int = PORT,
     dry_run: bool = False,
     roi: tuple[int, int, int, int] | None = None,
+    stop_event: "threading.Event | None" = None,
 ) -> None:
     device = None
 
@@ -106,7 +107,7 @@ def run(
         )
 
     try:
-        while True:
+        while stop_event is None or not stop_event.is_set():
             now = time.monotonic()
 
             if detector:

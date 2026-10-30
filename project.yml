@@ -13,8 +13,8 @@ targets:
       path: ios/TouchPadFC/Info.plist
       properties:
         CFBundleDisplayName: TouchPad FC
-        CFBundleShortVersionString: "1.2"
-        CFBundleVersion: "12"
+        CFBundleShortVersionString: "1.3"
+        CFBundleVersion: "13"
         NSLocalNetworkUsageDescription: TouchPadFC sends virtual gamepad inputs to the Windows PC on your local network.
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:

@@ -1,0 +1,55 @@
+name: Windows receiver
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install vgamepad==0.2.0 pyinstaller
+
+      - name: Freeze TouchPadFC.exe
+        run: python -m PyInstaller --noconfirm --clean --onefile --noconsole --name TouchPadFC --paths . --collect-all vgamepad --exclude-module mss --exclude-module numpy --distpath windows/dist --workpath windows/build --specpath windows windows/app.py
+
+      - name: Smoke test the frozen app
+        run: |
+          windows\dist\TouchPadFC.exe --selftest selftest.txt
+          Get-Content selftest.txt
+          $text = Get-Content selftest.txt -Raw
+          if ($text -notmatch "frozen=True") { throw "Build is not frozen" }
+          if ($text -notmatch "receiver_import=ok") { throw "receiver package missing" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TouchPadFC-windows-exe
+          path: windows/dist/TouchPadFC.exe
+          if-no-files-found: error
+
+      - name: Attach the exe to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for ($i = 1; $i -le 30; $i++) {
+            gh release view "$env:GITHUB_REF_NAME" *> $null
+            if ($LASTEXITCODE -eq 0) { break }
+            Start-Sleep -Seconds 10
+          }
+          gh release upload "$env:GITHUB_REF_NAME" windows/dist/TouchPadFC.exe --clobber
