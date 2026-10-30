@@ -38,7 +38,7 @@ jobs:
           set +e
           xcodebuild \
             -project TouchPadFC.xcodeproj \
-            -target TouchPadFC \
+            -scheme TouchPadFC \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build \
